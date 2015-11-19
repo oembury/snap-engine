@@ -60,66 +60,81 @@ public class OperatorDoclet extends Doclet {
     static String format;
 
     public static void main(String[] args) {
-        if (args.length == 0) {
-            format = "console";
-        } else if (args.length == 1) {
-            format = args[0];
-        } else {
-            System.out.println("Usage: OperatorDoclet [ console | html ]");
-            System.exit(1);
-        }
-
+        format = "html";
+//        if (args.length == 0) {
+//            format = "console";
+//        } else if (args.length == 1) {
+//            format = args[0];
+//        } else {
+//            System.out.println("Usage: OperatorDoclet [ console | html ]");
+//            System.exit(1);
+//        }
+        String basePath = "C:/Users/muhammad.bc/IdeaProjects/senbox/";
         com.sun.tools.javadoc.Main.main(new String[]{
                 "-doclet", OperatorDoclet.class.getName(),
                 "-sourcepath", "" +
-                               "./beam-gpf/src/main/java;" +
-                               "./beam-aatsr-sst/src/main/java;" +
-                               "./beam-binning/src/main/java;" +
-                               "./beam-cluster-analysis/src/main/java;" +
-                               "./beam-collocation/src/main/java;" +
-                               "./beam-flhmci/src/main/java;" +
-                               "./beam-meris-radiometry/src/main/java;" +
-                               "./beam-meris-smac/src/main/java;" +
-                               "./beam-meris-cloud/src/main/java;" +
-                               "./beam-pixel-extraction/src/main/java;" +
-                               "./beam-statistics-op/src/main/java;" +
-                               "./beam-temporal-percentile-op/src/main/java;" +
-                               "./beam-ndvi/src/main/java;" +
-                               "./beam-unmix/src/main/java",
+                    basePath + "snap-engine/snap-dem/src/main/java;" +
+                    basePath + "snap-engine/snap-engine-utilities/src/main/java;" +
+                    basePath + "snap-engine/snap-python/src/main/java;" +
+                    basePath + "snap-engine/snap-sta/src/main/java;" +
+                    basePath + "snap-engine/snap-binning/src/main/java;" +
+                    basePath + "snap-engine/snap-gpf/src/main/java;" +
+                    basePath + "snap-engine/snap-cluster-analysis/src/main/java;" +
+                    basePath + "snap-engine/snap-collocation/src/main/java;" +
+                    basePath + "snap-engine/snap-pixel-extraction/src/main/java;" +
+                    basePath + "snap-engine/snap-statistics/src/main/java;" +
+                    basePath + "snap-engine/snap-temporal-percentile/src/main/java;" +
+                    basePath + "snap-engine/snap-ndvi/src/main/java;" +
+                    basePath + "snap-engine/snap-unmix/src/main/java;" +
+                    basePath + "s3tbx/s3tbx-meris-smac/src/main/java;" +
+                    basePath + "s3tbx/s3tbx-aatsr-sst/src/main/java;" +
+                    basePath + "s3tbx/s3tbx-meris-cloud/src/main/java;" +
+                    basePath + "s3tbx/s3tbx-meris-flhmci/src/main/java;" +
+                    basePath + "s3tbx/s3tbx-meris-radiometry/src/main/java;" +
+                    basePath + "s3tbx/s3tbx-meris-ops/src/main/java;" +
+                    basePath + "s3tbx/s3tbx-slstr-pdu-stitching/src/main/java;",
 
-                "-classpath", "" +
-                              "./modules/beam-core-5.0.1;" +
-                              "./modules/beam-gpf-5.0;" +
-                              "./modules/beam-aatsr-sst-5.0;" +
-                              "./modules/beam-binning-5.0.1;" +
-                              "./modules/beam-cluster-analysis-5.0;" +
-                              "./modules/beam-collocation-5.0;" +
-                              "./modules/beam-flhmci-5.0;" +
-                              "./modules/beam-meris-radiometry-5.0;" +
-                              "./modules/beam-meris-smac-5.0;" +
-                              "./modules/beam-meris-cloud-5.0;" +
-                              "./modules/beam-pixel-extraction-5.0;" +
-                              "./modules/beam-statistics-op-5.0;" +
-                              "./modules/beam-temporal-percentile-op-5.0;" +
-                              "./modules/beam-ndvi-5.0;" +
-                              "./modules/beam-unmix-5.0",
+//                "-classpath", "" +
+//                    "./snap-engine/snap-dem/target/snap-dem-2.0.0-SNAPSHOT.jar;"+
+//                    "./snap-engine/snap-engine-utilities/target/snap-engine-utilities-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-python/target/snap-python-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-sta/target/snap-sta-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-binning/target/snap-binning-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-gpf/target/snap-gpf-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-cluster-analysis/target/snap-cluster-analysis-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-collocation/target/snap-collocation-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-pixel-extraction/target/snap-pixel-extraction-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-statistics/target/snap-statistics-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-temporal-percentile/target/snap-temporal-percentile-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-ndvi/target/snap-ndvi-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/snap-unmix/target/snap-unmix-2.0.0-SNAPSHOT.jar;" +
+//                    "./snap-engine/ceres-core/target/ceres-core-2.0.0-SNAPSHOT.jar;"+
+//                    "./s3tbx/s3tbx-meris-smac/target/s3tbx-meris-smac-2.0.0-SNAPSHOT-sources.jar;" +
+//                    "./s3tbx/s3tbx-meris-cloud/target/s3tbx-meris-cloud-2.0.0-SNAPSHOT.jar;" +
+//                    "./s3tbx/s3tbx-meris-ops/target/s3tbx-meris-ops-2.0.0-SNAPSHOT.jar"+
+//                    "./snap-engine/snap-core/target/snap-core-2.0.0-SNAPSHOT.jar;" +
+//                    "./s3tbx/s3tbx-slstr-pdu-stitching/target/s3tbx-slstr-pdu-stitching-2.0.0-SNAPSHOT.jar;" ,
 
+
+                "org.esa.snap.dem.gpf",
+                "org.esa.snap.engine_utilities.gpf",
+                "org.esa.snap.python.gpf",
                 "org.esa.snap.core.gpf.common",
                 "org.esa.snap.core.gpf.common.reproject",
-                "org.esa.snap.s3tbx.meris",
-                "org.esa.snap.aatsr.sst",
                 "org.esa.snap.binning.operator",
                 "org.esa.snap.cluster",
                 "org.esa.snap.collocation",
-                "org.esa.snap.processor.flh_mci",
-                "org.esa.snap.meris.radiometry",
-                "org.esa.snap.smac",
-                "org.esa.snap.operator.cloud",
                 "org.esa.snap.pixex",
                 "org.esa.snap.statistics",
                 "org.esa.snap.statistics.percentile.interpolated",
                 "org.esa.snap.ndvi",
                 "org.esa.snap.unmixing",
+                "org.esa.s3tbx.operator.cloud",
+                "org.esa.s3tbx.aatsr.sst",
+                "org.esa.s3tbx.smac",
+                "org.esa.s3tbx.processor.flh_mci",
+                "org.esa.s3tbx.meris.radiometry",
+                "org.esa.s3tbx.slstr.pdu.stitching"
         });
     }
 

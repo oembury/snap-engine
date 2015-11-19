@@ -40,7 +40,8 @@ public class OperatorHandlerHtml implements OperatorHandler {
 
     @Override
     public void start(RootDoc root) throws IOException, URISyntaxException {
-        final URL location = OperatorHandlerHtml.class.getProtectionDomain().getCodeSource().getLocation();
+        final URL location = new File(".").toURI().toURL();
+        // OperatorHandlerHtml.class.getProtectionDomain().getCodeSource().getLocation();
         baseDir = new File(new File(location.toURI()), "org/esa/snap/core/gpf/docs/gpf");
         System.out.println("Output goes to " + baseDir);
         if (!baseDir.isDirectory()) {
