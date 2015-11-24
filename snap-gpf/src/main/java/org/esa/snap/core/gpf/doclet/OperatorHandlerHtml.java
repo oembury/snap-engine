@@ -41,7 +41,6 @@ public class OperatorHandlerHtml implements OperatorHandler {
     @Override
     public void start(RootDoc root) throws IOException, URISyntaxException {
         final URL location = new File(".").toURI().toURL();
-        // OperatorHandlerHtml.class.getProtectionDomain().getCodeSource().getLocation();
         baseDir = new File(new File(location.toURI()), "org/esa/snap/core/gpf/docs/gpf");
         System.out.println("Output goes to " + baseDir);
         if (!baseDir.isDirectory()) {
@@ -50,6 +49,7 @@ public class OperatorHandlerHtml implements OperatorHandler {
             }
         }
     }
+
 
     @Override
     public void stop(RootDoc root) throws IOException {
@@ -160,6 +160,7 @@ public class OperatorHandlerHtml implements OperatorHandler {
                 writer.println("</tr>");
             }
             writer.println("</table>");
+
         } else {
             writer.println("<p><i>This operator does not have any parameters.</i>");
         }
@@ -192,7 +193,7 @@ public class OperatorHandlerHtml implements OperatorHandler {
                 "    <tr class=\"header\">\n" +
                 "        <td class=\"header\">&nbsp;"+title+"</td>\n" +
                 "        <td class=\"header\" align=\"right\">\n" +
-                "           <a href=\"../general/BeamOverview.html\">" +
+                "          <a href=\"../general/overview/SnapOverview.html\">" +
                 "             <img src=\"images/snap_header.jpg\" border=\"0\"/></a>\n" +
                 "        </td>\n" +
                 "    </tr>\n" +

@@ -60,15 +60,14 @@ public class OperatorDoclet extends Doclet {
     static String format;
 
     public static void main(String[] args) {
-        format = "html";
-//        if (args.length == 0) {
-//            format = "console";
-//        } else if (args.length == 1) {
-//            format = args[0];
-//        } else {
-//            System.out.println("Usage: OperatorDoclet [ console | html ]");
-//            System.exit(1);
-//        }
+        if (args.length == 0) {
+            format = "console";
+        } else if (args.length == 1) {
+            format = args[0];
+        } else {
+            System.out.println("Usage: OperatorDoclet [ console | html ]");
+            System.exit(1);
+        }
         String basePath = "C:/Users/muhammad.bc/IdeaProjects/senbox/";
         com.sun.tools.javadoc.Main.main(new String[]{
                 "-doclet", OperatorDoclet.class.getName(),
