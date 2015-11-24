@@ -46,7 +46,8 @@ import java.util.Map;
         category = "Optical/Thematic Land Processing",
         description = "The retrieves the Normalized Difference Vegetation Index (NDVI).",
         authors = "Maximilian Aulinger, Thomas Storm",
-        copyright = "Copyright (C) 2002-2014 by Brockmann Consult (info@brockmann-consult.de)")
+        copyright = "Copyright (C) 2002-2014 by Brockmann Consult (info@brockmann-consult.de).",
+        version = "")
 public class NdviOp extends Operator {
 
     // constants
@@ -59,7 +60,7 @@ public class NdviOp extends Operator {
     public static final int NDVI_LOW_FLAG_VALUE = 1 << 1;
     public static final int NDVI_HIGH_FLAG_VALUE = 1 << 2;
 
-    @SourceProduct(alias = "source", description="The source product.")
+    @SourceProduct(alias = "source", description = "The source product.")
     private Product sourceProduct;
     @TargetProduct
     private Product targetProduct;
@@ -71,17 +72,58 @@ public class NdviOp extends Operator {
     private float nirFactor;
 
     @Parameter(label = "Red source band",
-               description = "The red band for the NDVI computation. If not provided, the " +
-                             "operator will try to find the best fitting band.",
-               rasterDataNodeType = Band.class)
+            description = "The red band for the NDVI computation. If not provided, the " +
+                    "operator will try to find the best fitting band.",
+            rasterDataNodeType = Band.class)
     private String redSourceBand;
 
     @Parameter(label = "NIR source band",
-               description = "The near-infrared band for the NDVI computation. If not provided," +
-                             " the operator will try to find the best fitting band.",
-               rasterDataNodeType = Band.class)
+            description = "The near-infrared band for the NDVI computation. If not provided," +
+                    " the operator will try to find the best fitting band.",
+            rasterDataNodeType = Band.class)
     private String nirSourceBand;
 
+    // package local for testing reasons only
+    static String findBand(float minWavelength, float maxWavelength, Product product) {
+        String bestBand = null;
+        float bestBandLowerDelta = Float.MAX_VALUE;
+        for (Band band : product.getBands()) {
+            float bandWavelength = band.getSpectralWavelength();
+            if (bandWavelength != 0.0F) {
+                float lowerDelta = bandWavelength - minWavelength;
+                if (lowerDelta < bestBandLowerDelta && bandWavelength <= maxWavelength && bandWavelength >= minWavelength) {
+                    bestBand = band.getName();
+                    bestBandLowerDelta = lowerDelta;
+                }
+            }
+        }
+        return bestBand;
+    }
+
+    private static FlagCoding createNdviFlagCoding() {
+
+        FlagCoding ndviFlagCoding = new FlagCoding("ndvi_flags");
+        ndviFlagCoding.setDescription("NDVI Flag Coding");
+
+        MetadataAttribute attribute;
+
+        attribute = new MetadataAttribute(NDVI_ARITHMETIC_FLAG_NAME, ProductData.TYPE_INT32);
+        attribute.getData().setElemInt(NDVI_ARITHMETIC_FLAG_VALUE);
+        attribute.setDescription("NDVI value calculation failed due to an arithmetic exception");
+        ndviFlagCoding.addAttribute(attribute);
+
+        attribute = new MetadataAttribute(NDVI_LOW_FLAG_NAME, ProductData.TYPE_INT32);
+        attribute.getData().setElemInt(NDVI_LOW_FLAG_VALUE);
+        attribute.setDescription("NDVI value is too low");
+        ndviFlagCoding.addAttribute(attribute);
+
+        attribute = new MetadataAttribute(NDVI_HIGH_FLAG_NAME, ProductData.TYPE_INT32);
+        attribute.getData().setElemInt(NDVI_HIGH_FLAG_VALUE);
+        attribute.setDescription("NDVI value is too high");
+        ndviFlagCoding.addAttribute(attribute);
+
+        return ndviFlagCoding;
+    }
 
     @Override
     public void initialize() throws OperatorException {
@@ -177,48 +219,6 @@ public class NdviOp extends Operator {
         if (nirSourceBand == null) {
             throw new OperatorException("Unable to find band that could be used as nir input band. Please specify band.");
         }
-    }
-
-    // package local for testing reasons only
-    static String findBand(float minWavelength, float maxWavelength, Product product) {
-        String bestBand = null;
-        float bestBandLowerDelta = Float.MAX_VALUE;
-        for (Band band : product.getBands()) {
-            float bandWavelength = band.getSpectralWavelength();
-            if (bandWavelength != 0.0F) {
-                float lowerDelta = bandWavelength - minWavelength;
-                if (lowerDelta < bestBandLowerDelta && bandWavelength <= maxWavelength && bandWavelength >= minWavelength) {
-                    bestBand = band.getName();
-                    bestBandLowerDelta = lowerDelta;
-                }
-            }
-        }
-        return bestBand;
-    }
-
-    private static FlagCoding createNdviFlagCoding() {
-
-        FlagCoding ndviFlagCoding = new FlagCoding("ndvi_flags");
-        ndviFlagCoding.setDescription("NDVI Flag Coding");
-
-        MetadataAttribute attribute;
-
-        attribute = new MetadataAttribute(NDVI_ARITHMETIC_FLAG_NAME, ProductData.TYPE_INT32);
-        attribute.getData().setElemInt(NDVI_ARITHMETIC_FLAG_VALUE);
-        attribute.setDescription("NDVI value calculation failed due to an arithmetic exception");
-        ndviFlagCoding.addAttribute(attribute);
-
-        attribute = new MetadataAttribute(NDVI_LOW_FLAG_NAME, ProductData.TYPE_INT32);
-        attribute.getData().setElemInt(NDVI_LOW_FLAG_VALUE);
-        attribute.setDescription("NDVI value is too low");
-        ndviFlagCoding.addAttribute(attribute);
-
-        attribute = new MetadataAttribute(NDVI_HIGH_FLAG_NAME, ProductData.TYPE_INT32);
-        attribute.getData().setElemInt(NDVI_HIGH_FLAG_VALUE);
-        attribute.setDescription("NDVI value is too high");
-        ndviFlagCoding.addAttribute(attribute);
-
-        return ndviFlagCoding;
     }
 
     public static class Spi extends OperatorSpi {

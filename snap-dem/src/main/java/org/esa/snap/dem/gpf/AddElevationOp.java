@@ -51,7 +51,8 @@ import java.util.Map;
         category = "Raster/DEM Tools",
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2014 by Array Systems Computing Inc.",
-        description = "Creates a DEM band")
+        description = "Creates a DEM band.",
+        version = "2.0")
 public final class AddElevationOp extends Operator {
 
     @SourceProduct(alias = "source")

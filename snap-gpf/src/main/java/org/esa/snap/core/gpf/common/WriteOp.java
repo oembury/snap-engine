@@ -51,10 +51,10 @@ import java.util.Map;
 /**
  * This standard operator is used to store a data product to a specified file location.
  * <p>
- * It is used by the framework, e.g. the {@code gpt} command line tool, to write target products.
+ * It is used by the framework, e.g. the <code>gpt</code> command line tool, to write target products.
  * <p>
  * It may also be used by clients to write out break-point product files. This is done by placing
- * a {@code WriteOp} node after any node in a processing graph:
+ * a <code>WriteOp</code> node after any node in a processing graph:
  * <p>
  * <pre>
  * &lt;node id="anyNodeId"&gt;

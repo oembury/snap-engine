@@ -82,12 +82,12 @@ public class CollocateOp extends Operator {
     private Product targetProduct;
 
     @Parameter(defaultValue = "_collocated",
-            description = "The name of the target product")
+            description = "The name of the target product.")
     @Deprecated
     private String targetProductName;
 
     @Parameter(defaultValue = "COLLOCATED",
-            description = "The product type string for the target product (informal)")
+            description = "The product type string for the target product (informal).")
     private String targetProductType;
 
     @Parameter(defaultValue = "true",

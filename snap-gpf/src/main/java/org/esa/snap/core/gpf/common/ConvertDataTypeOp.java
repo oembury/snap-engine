@@ -44,19 +44,23 @@ import java.util.List;
         category = "Raster/Data Conversion",
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2015 by Array Systems Computing Inc.",
-        description = "Convert product data type")
+        description = "Convert product data type.",
+        version = "")
 public class ConvertDataTypeOp extends Operator {
 
+    public final static String SCALING_TRUNCATE = "Truncate";
+    public final static String SCALING_LINEAR = "Linear (slope and intercept)";
+    public final static String SCALING_LINEAR_CLIPPED = "Linear (between 95% clipped histogram)";
+    public final static String SCALING_LINEAR_PEAK_CLIPPED = "Linear (peak clipped histogram)";
+    public final static String SCALING_LOGARITHMIC = "Logarithmic";
     @SourceProduct(alias = "source")
     private Product sourceProduct;
     @TargetProduct
     private Product targetProduct;
-
     @Parameter(description = "The list of source bands.", alias = "sourceBands",
             rasterDataNodeType = Band.class, label = "Source Bands")
     private
     String[] sourceBandNames;
-
     @Parameter(valueSet = {ProductData.TYPESTRING_INT8,
             ProductData.TYPESTRING_INT16,
             ProductData.TYPESTRING_INT32,
@@ -68,58 +72,12 @@ public class ConvertDataTypeOp extends Operator {
     }, defaultValue = ProductData.TYPESTRING_UINT8, label = "Target Data Type")
     private String targetDataType = ProductData.TYPESTRING_UINT8;
     private int dataType = ProductData.TYPE_UINT8;
-
     @Parameter(valueSet = {SCALING_TRUNCATE, SCALING_LINEAR,
             SCALING_LINEAR_CLIPPED, SCALING_LINEAR_PEAK_CLIPPED,
             SCALING_LOGARITHMIC},
             defaultValue = SCALING_LINEAR_CLIPPED, label = "Scaling")
     private String targetScalingStr = SCALING_LINEAR_CLIPPED;
-
-    public final static String SCALING_TRUNCATE = "Truncate";
-    public final static String SCALING_LINEAR = "Linear (slope and intercept)";
-    public final static String SCALING_LINEAR_CLIPPED = "Linear (between 95% clipped histogram)";
-    public final static String SCALING_LINEAR_PEAK_CLIPPED = "Linear (peak clipped histogram)";
-    public final static String SCALING_LOGARITHMIC = "Logarithmic";
-
-    public enum ScalingType {NONE, TRUNC, LINEAR, LINEAR_CLIPPED, LINEAR_PEAK_CLIPPED, LOGARITHMIC}
-
     private ScalingType targetScaling = ScalingType.LINEAR_CLIPPED;
-
-    /**
-     * Initializes this operator and sets the one and only target product.
-     * <p>The target product can be either defined by a field of type {@link Product} annotated with the
-     * {@link TargetProduct TargetProduct} annotation or
-     * by calling {@link #setTargetProduct} method.</p>
-     * <p>The framework calls this method after it has created this operator.
-     * Any client code that must be performed before computation of tile data
-     * should be placed here.</p>
-     *
-     * @throws OperatorException If an error occurs during operator initialisation.
-     * @see #getTargetProduct()
-     */
-    @Override
-    public void initialize() throws OperatorException {
-        if (sourceProduct.isMultiSizeProduct()) {
-            throw createMultiSizeException(sourceProduct);
-        }
-
-        try {
-            targetProduct = new Product(sourceProduct.getName(),
-                    sourceProduct.getProductType(),
-                    sourceProduct.getSceneRasterWidth(),
-                    sourceProduct.getSceneRasterHeight());
-
-            ProductUtils.copyProductNodes(sourceProduct, targetProduct);
-
-            dataType = ProductData.getType(targetDataType);
-            targetScaling = getScaling(targetScalingStr);
-
-            addSelectedBands();
-
-        } catch (Throwable e) {
-            throw new OperatorException(e);
-        }
-    }
 
     private static ScalingType getScaling(final String scalingStr) {
         switch (scalingStr) {
@@ -141,8 +99,8 @@ public class ConvertDataTypeOp extends Operator {
     /**
      * get the selected bands
      *
-     * @param sourceProduct   the input product
-     * @param sourceBandNames the select band names
+     * @param sourceProduct       the input product
+     * @param sourceBandNames     the select band names
      * @param includeVirtualBands include virtual bands by default
      * @return band list
      * @throws OperatorException if source band not found
@@ -169,12 +127,116 @@ public class ConvertDataTypeOp extends Operator {
         return sourceBandList.toArray(new Band[sourceBandList.size()]);
     }
 
+    private static double getMin(final int dataType) {
+        switch (dataType) {
+            case ProductData.TYPE_INT8:
+                return Byte.MIN_VALUE;
+            case ProductData.TYPE_INT16:
+                return Short.MIN_VALUE;
+            case ProductData.TYPE_INT32:
+                return Integer.MIN_VALUE;
+            case ProductData.TYPE_UINT8:
+                return 0;
+            case ProductData.TYPE_UINT16:
+                return 0;
+            case ProductData.TYPE_UINT32:
+                return 0;
+            case ProductData.TYPE_FLOAT32:
+                return Float.MIN_VALUE;
+            default:
+                return Double.MIN_VALUE;
+        }
+    }
+
+    private static double getMax(final int dataType) {
+        switch (dataType) {
+            case ProductData.TYPE_INT8:
+                return Byte.MAX_VALUE;
+            case ProductData.TYPE_INT16:
+                return Short.MAX_VALUE;
+            case ProductData.TYPE_INT32:
+                return Integer.MAX_VALUE;
+            case ProductData.TYPE_UINT8:
+                return Byte.MAX_VALUE + Byte.MAX_VALUE + 1;
+            case ProductData.TYPE_UINT16:
+                return Short.MAX_VALUE + Short.MAX_VALUE + 1;
+            case ProductData.TYPE_UINT32:
+                return Long.MAX_VALUE;
+            case ProductData.TYPE_FLOAT32:
+                return Float.MAX_VALUE;
+            default:
+                return Double.MAX_VALUE;
+        }
+    }
+
+    private static ScalingType verifyScaling(final ScalingType targetScaling, final int targetDataType) {
+        // if converting up don't scale
+        if (targetDataType == ProductData.TYPE_FLOAT32 || targetDataType == ProductData.TYPE_FLOAT64 ||
+                targetDataType == ProductData.TYPE_INT32)
+            return ScalingType.NONE;
+        return targetScaling;
+    }
+
+    private static double truncate(final double origValue, final double newMin, final double newMax) {
+        if (origValue > newMax)
+            return newMax;
+        else if (origValue < newMin)
+            return newMin;
+        return origValue;
+    }
+
+    private static double scale(final double origValue, final double origMin, final double newMin,
+                                final double origRange, final double newRange) {
+        return ((origValue - origMin) / origRange) * newRange + newMin;
+    }
+
+    private static double logScale(final double origValue, final double origMin, final double newMin,
+                                   final double origRange, final double newRange) {
+        return 10 * Math.log10(((origValue - origMin) / origRange) * newRange + newMin);
+    }
+
+    /**
+     * Initializes this operator and sets the one and only target product.
+     * <p>The target product can be either defined by a field of type {@link Product} annotated with the
+     * {@link TargetProduct TargetProduct} annotation or
+     * by calling {@link #setTargetProduct} method.</p>
+     * <p>The framework calls this method after it has created this operator.
+     * Any client code that must be performed before computation of tile data
+     * should be placed here.</p>
+     *
+     * @throws OperatorException If an error occurs during operator initialisation.
+     * @see #getTargetProduct()
+     */
+    @Override
+    public void initialize() throws OperatorException {
+        if (sourceProduct.isMultiSizeProduct()) {
+            throw createMultiSizeException(sourceProduct);
+        }
+
+        try {
+            targetProduct = new Product(sourceProduct.getName(),
+                                        sourceProduct.getProductType(),
+                                        sourceProduct.getSceneRasterWidth(),
+                                        sourceProduct.getSceneRasterHeight());
+
+            ProductUtils.copyProductNodes(sourceProduct, targetProduct);
+
+            dataType = ProductData.getType(targetDataType);
+            targetScaling = getScaling(targetScalingStr);
+
+            addSelectedBands();
+
+        } catch (Throwable e) {
+            throw new OperatorException(e);
+        }
+    }
+
     private void addSelectedBands() {
         final Band[] sourceBands = getSourceBands(sourceProduct, sourceBandNames, false);
 
         for (Band srcBand : sourceBands) {
             final Band targetBand = new Band(srcBand.getName(), dataType,
-                    sourceProduct.getSceneRasterWidth(), sourceProduct.getSceneRasterHeight());
+                                             sourceProduct.getSceneRasterWidth(), sourceProduct.getSceneRasterHeight());
             targetBand.setUnit(srcBand.getUnit());
             targetBand.setDescription(srcBand.getDescription());
             targetProduct.addBand(targetBand);
@@ -265,74 +327,6 @@ public class ConvertDataTypeOp extends Operator {
         }
     }
 
-    private static double getMin(final int dataType) {
-        switch (dataType) {
-            case ProductData.TYPE_INT8:
-                return Byte.MIN_VALUE;
-            case ProductData.TYPE_INT16:
-                return Short.MIN_VALUE;
-            case ProductData.TYPE_INT32:
-                return Integer.MIN_VALUE;
-            case ProductData.TYPE_UINT8:
-                return 0;
-            case ProductData.TYPE_UINT16:
-                return 0;
-            case ProductData.TYPE_UINT32:
-                return 0;
-            case ProductData.TYPE_FLOAT32:
-                return Float.MIN_VALUE;
-            default:
-                return Double.MIN_VALUE;
-        }
-    }
-
-    private static double getMax(final int dataType) {
-        switch (dataType) {
-            case ProductData.TYPE_INT8:
-                return Byte.MAX_VALUE;
-            case ProductData.TYPE_INT16:
-                return Short.MAX_VALUE;
-            case ProductData.TYPE_INT32:
-                return Integer.MAX_VALUE;
-            case ProductData.TYPE_UINT8:
-                return Byte.MAX_VALUE + Byte.MAX_VALUE + 1;
-            case ProductData.TYPE_UINT16:
-                return Short.MAX_VALUE + Short.MAX_VALUE + 1;
-            case ProductData.TYPE_UINT32:
-                return Long.MAX_VALUE;
-            case ProductData.TYPE_FLOAT32:
-                return Float.MAX_VALUE;
-            default:
-                return Double.MAX_VALUE;
-        }
-    }
-
-    private static ScalingType verifyScaling(final ScalingType targetScaling, final int targetDataType) {
-        // if converting up don't scale
-        if (targetDataType == ProductData.TYPE_FLOAT32 || targetDataType == ProductData.TYPE_FLOAT64 ||
-                targetDataType == ProductData.TYPE_INT32)
-            return ScalingType.NONE;
-        return targetScaling;
-    }
-
-    private static double truncate(final double origValue, final double newMin, final double newMax) {
-        if (origValue > newMax)
-            return newMax;
-        else if (origValue < newMin)
-            return newMin;
-        return origValue;
-    }
-
-    private static double scale(final double origValue, final double origMin, final double newMin,
-                                final double origRange, final double newRange) {
-        return ((origValue - origMin) / origRange) * newRange + newMin;
-    }
-
-    private static double logScale(final double origValue, final double origMin, final double newMin,
-                                   final double origRange, final double newRange) {
-        return 10 * Math.log10(((origValue - origMin) / origRange) * newRange + newMin);
-    }
-
     // for unit tests
     public void setTargetDataType(final String newType) {
         targetDataType = newType;
@@ -341,6 +335,8 @@ public class ConvertDataTypeOp extends Operator {
     public void setScaling(final String newScaling) {
         targetScalingStr = newScaling;
     }
+
+    public enum ScalingType {NONE, TRUNC, LINEAR, LINEAR_CLIPPED, LINEAR_PEAK_CLIPPED, LOGARITHMIC}
 
     /**
      * The SPI is used to register this operator in the graph processing framework

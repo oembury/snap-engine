@@ -43,7 +43,8 @@ import java.awt.Rectangle;
         category = "Raster/DEM Tools",
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2014 by Array Systems Computing Inc.",
-        description = "Fill holes in given DEM product file.")
+        description = "Fill holes in given DEM product file.",
+        version = "")
 public final class FillDEMHoleOp extends Operator {
 
     @SourceProduct(alias = "source")

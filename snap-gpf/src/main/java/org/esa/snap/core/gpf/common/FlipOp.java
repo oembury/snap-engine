@@ -40,7 +40,8 @@ import java.util.List;
         category = "Raster",
         authors = "Jun Lu, Luis Veci",
         copyright = "Copyright (C) 2015 by Array Systems Computing Inc.",
-        description = "flips a product horizontal/vertical")
+        description = "flips a product horizontal/vertical.",
+        version = "")
 public final class FlipOp extends Operator {
 
     @SourceProduct(alias = "source")
@@ -57,62 +58,10 @@ public final class FlipOp extends Operator {
     private String flipType = "Vertical";
 
     /**
-     * Initializes this operator and sets the one and only target product.
-     * <p>The target product can be either defined by a field of type {@link Product} annotated with the
-     * {@link TargetProduct TargetProduct} annotation or
-     * by calling {@link #setTargetProduct} method.</p>
-     * <p>The framework calls this method after it has created this operator.
-     * Any client code that must be performed before computation of tile data
-     * should be placed here.</p>
-     *
-     * @throws OperatorException If an error occurs during operator initialisation.
-     * @see #getTargetProduct()
-     */
-    @Override
-    public void initialize() throws OperatorException {
-
-        if(sourceProduct.isMultiSizeProduct()) {
-            throw createMultiSizeException(sourceProduct);
-        }
-
-        try {
-            int flippingType = ProductFlipper.FLIP_BOTH;
-            if (flipType.equalsIgnoreCase("Horizontal"))
-                flippingType = ProductFlipper.FLIP_HORIZONTAL;
-            else if (flipType.equalsIgnoreCase("Vertical"))
-                flippingType = ProductFlipper.FLIP_VERTICAL;
-
-            sourceProduct = ProductFlipperExt.createFlippedProduct(sourceProduct, flippingType,
-                                                                   sourceProduct.getName(), sourceProduct.getDescription());
-
-            targetProduct = new Product(sourceProduct.getName(),
-                    sourceProduct.getProductType(),
-                    sourceProduct.getSceneRasterWidth(),
-                    sourceProduct.getSceneRasterHeight());
-
-            addSelectedBands();
-
-            ProductUtils.copyProductNodes(sourceProduct, targetProduct);
-        } catch (Throwable e) {
-            throw new OperatorException(e);
-        }
-    }
-
-    private void addSelectedBands() throws OperatorException {
-
-        final Band[] sourceBands = getSourceBands(sourceProduct, sourceBandNames, false);
-
-        for (Band srcBand : sourceBands) {
-            final Band targetBand = ProductUtils.copyBand(srcBand.getName(), sourceProduct, targetProduct, false);
-            targetBand.setSourceImage(srcBand.getSourceImage());
-        }
-    }
-
-    /**
      * get the selected bands
      *
-     * @param sourceProduct   the input product
-     * @param sourceBandNames the select band names
+     * @param sourceProduct       the input product
+     * @param sourceBandNames     the select band names
      * @param includeVirtualBands include virtual bands by default
      * @return band list
      * @throws OperatorException if source band not found
@@ -137,6 +86,58 @@ public final class FlipOp extends Operator {
             }
         }
         return sourceBandList.toArray(new Band[sourceBandList.size()]);
+    }
+
+    /**
+     * Initializes this operator and sets the one and only target product.
+     * <p>The target product can be either defined by a field of type {@link Product} annotated with the
+     * {@link TargetProduct TargetProduct} annotation or
+     * by calling {@link #setTargetProduct} method.</p>
+     * <p>The framework calls this method after it has created this operator.
+     * Any client code that must be performed before computation of tile data
+     * should be placed here.</p>
+     *
+     * @throws OperatorException If an error occurs during operator initialisation.
+     * @see #getTargetProduct()
+     */
+    @Override
+    public void initialize() throws OperatorException {
+
+        if (sourceProduct.isMultiSizeProduct()) {
+            throw createMultiSizeException(sourceProduct);
+        }
+
+        try {
+            int flippingType = ProductFlipper.FLIP_BOTH;
+            if (flipType.equalsIgnoreCase("Horizontal"))
+                flippingType = ProductFlipper.FLIP_HORIZONTAL;
+            else if (flipType.equalsIgnoreCase("Vertical"))
+                flippingType = ProductFlipper.FLIP_VERTICAL;
+
+            sourceProduct = ProductFlipperExt.createFlippedProduct(sourceProduct, flippingType,
+                                                                   sourceProduct.getName(), sourceProduct.getDescription());
+
+            targetProduct = new Product(sourceProduct.getName(),
+                                        sourceProduct.getProductType(),
+                                        sourceProduct.getSceneRasterWidth(),
+                                        sourceProduct.getSceneRasterHeight());
+
+            addSelectedBands();
+
+            ProductUtils.copyProductNodes(sourceProduct, targetProduct);
+        } catch (Throwable e) {
+            throw new OperatorException(e);
+        }
+    }
+
+    private void addSelectedBands() throws OperatorException {
+
+        final Band[] sourceBands = getSourceBands(sourceProduct, sourceBandNames, false);
+
+        for (Band srcBand : sourceBands) {
+            final Band targetBand = ProductUtils.copyBand(srcBand.getName(), sourceProduct, targetProduct, false);
+            targetBand.setSourceImage(srcBand.getSourceImage());
+        }
     }
 
     /**

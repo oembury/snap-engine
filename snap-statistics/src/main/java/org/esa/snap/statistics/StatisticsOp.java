@@ -70,8 +70,8 @@ import java.util.logging.Level;
  * <li>a shapefile that corresponds to the input shapefile, enriched with the statistics for the regions defined by the shapefile</li>
  * </ul>
  * <p>
- * Unlike most other operators, that can compute single {@link Tile tiles},
- * the statistics operator processes all of its source products in its {@link #initialize()} method.
+ * Unlike most other operators, that can compute single <a>Tile</a> tiles,
+ * the statistics operator processes all of its source products in its <code>initialize</code> method.
  *
  * @author Sabine Embacher
  * @author Tonio Fincke
